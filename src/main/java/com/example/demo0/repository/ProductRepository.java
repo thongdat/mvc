@@ -22,5 +22,31 @@ public class ProductRepository implements IProductRepository {
     public void save(Product product) {
         productList.add(product);
     }
+    @Override
+    public Product findById(String id) {
+
+        for (Product p : productList) {
+            if (p.getId().equals(id)) {
+                return p;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public void update(Product product) {
+        Product existing = findById(product.getId());
+        if (existing != null) {
+            existing.setName(product.getName());
+            existing.setPrice(product.getPrice());
+            existing.setDescription(product.getDescription());
+            existing.setProductor(product.getProductor());
+        }
+    }
+
+    @Override
+    public void delete(String id) {
+        productList.removeIf(p -> p.getId().equals(id));
+    }
 }
 

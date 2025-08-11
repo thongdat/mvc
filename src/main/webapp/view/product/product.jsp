@@ -1,27 +1,29 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: DAT
-  Date: 8/8/2025
-  Time: 8:45 PM
-  To change this template use File | Settings | File Templates.
---%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <html>
 <head>
-    <title></title>
+    <title>Danh sách sản phẩm</title>
 </head>
 <body>
-<h1>Danh sách </h1>
+<h1>Danh sách sản phẩm</h1>
+
 <a href="/product?action=create">Thêm sản phẩm mới</a>
-<table>
+
+<form action="/product" method="post" style="margin-top:10px;">
+    <input type="hidden" name="action" value="search">
+    <input type="text" name="keyword" placeholder="Tìm theo tên">
+    <input type="submit" value="Tìm kiếm">
+</form>
+
+<table border="1" cellpadding="5" cellspacing="0" style="margin-top:10px;">
     <tr>
         <th>ID</th>
         <th>Name</th>
         <th>Price</th>
-        <th>Mo ta</th>
-        <th>nha san xuat</th>
+        <th>Mô tả</th>
+        <th>Nhà sản xuất</th>
+        <th>Hành động</th>
     </tr>
     <c:forEach var="p" items="${productList}">
         <tr>
@@ -30,9 +32,15 @@
             <td>${p.price}</td>
             <td>${p.description}</td>
             <td>${p.productor}</td>
+            <td>
+                <a href="/product?action=edit&id=${p.id}">Edit</a> |
+                <a href="/product?action=delete&id=${p.id}" onclick="return confirm('Bạn có chắc muốn xóa?')">Delete</a>
+            </td>
         </tr>
     </c:forEach>
 </table>
+</body>
+</html>
 
 
 

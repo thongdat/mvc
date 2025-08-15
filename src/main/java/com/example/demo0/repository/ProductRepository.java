@@ -1,6 +1,11 @@
 package com.example.demo0.repository;
 
 import com.example.demo0.model.Product;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,12 +20,47 @@ public class ProductRepository implements IProductRepository {
 
     @Override
     public List<Product> findAll() {
+        List<Product> productList = new ArrayList<>();
+
+
+        try(Connection connection = BaseRepository.getConnectDB();) {
+            PreparedStatement preparedStatement = connection.prepareStatement("select *\n" +
+                    "from product\n" +
+                    "order by name asc;");
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                String id = resultSet.getString("id");
+                String name = resultSet.getString("name");
+                int price = resultSet.getInt("price");
+                String description = resultSet.getString("description");
+                String productor = resultSet.getString("productor");
+                Product product = new Product(id, name, price, description, productor);
+                productList.add(product);
+            }
+
+        }catch (SQLException e){
+            System.out.println("Loi Querry");
+        }
+
         return productList;
+
+
     }
 
     @Override
     public void save(Product product) {
-        productList.add(product);
+        try(Connection connection = BaseRepository.getConnectDB();){
+            PreparedStatement preparedStatement = connection.prepareStatement("insert into product(id,name,price,description,productor) values(?,?,?,?,?);");
+            preparedStatement.setString(1, product.getId());
+            preparedStatement.setString(2, product.getName());
+            preparedStatement.setInt(3, product.getPrice());
+            preparedStatement.setString(4, product.getDescription());
+            preparedStatement.setString(5, product.getProductor());
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
     }
     @Override
     public Product findById(String id) {

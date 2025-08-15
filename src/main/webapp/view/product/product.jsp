@@ -33,7 +33,7 @@
             <td>${p.description}</td>
             <td>${p.productor}</td>
             <td>
-                <a href="/product?action=edit&id=${p.id}">Edit</a> |
+                <a href="/product?action=edit&id=${p.id}" style ="color: aqua" >Edit</a> |
                 <a href="/product?action=delete&id=${p.id}" onclick="return confirm('Bạn có chắc muốn xóa?')">Delete</a>
             </td>
         </tr>

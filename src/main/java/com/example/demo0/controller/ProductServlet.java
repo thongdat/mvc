@@ -115,9 +115,9 @@ public class ProductServlet extends HttpServlet {
         String name = request.getParameter("name");
         int price = Integer.parseInt(request.getParameter("price"));
         String description = request.getParameter("description");
-        String manufacturer = request.getParameter("manufacturer");
+        String productor = request.getParameter("productor");
 
-        Product newProduct = new Product(id, name, price, description, manufacturer);
+        Product newProduct = new Product(id, name, price, description, productor);
         productService.save(newProduct);
         response.sendRedirect("/product");
     }

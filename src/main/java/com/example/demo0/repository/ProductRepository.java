@@ -2,15 +2,13 @@ package com.example.demo0.repository;
 
 import com.example.demo0.model.Product;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ProductRepository implements IProductRepository {
     private static final List<Product> productList = new ArrayList<>();
+    private final String DELETE_BY_ID = "call delete_by_id(?);";
 
     static {
         productList.add(new Product("1", "a", 123332312, "good", "a"));
@@ -85,8 +83,17 @@ public class ProductRepository implements IProductRepository {
     }
 
     @Override
-    public void delete(String id) {
-        productList.removeIf(p -> p.getId().equals(id));
+    public boolean delete(String id) {
+        try (Connection connection = BaseRepository.getConnectDB()) {
+            CallableStatement callableStatement = connection.prepareCall(DELETE_BY_ID);
+            callableStatement.setString(1, id);
+            int effectRow = callableStatement.executeUpdate();
+            return effectRow == 1;
+        } catch (SQLException e) {
+            System.out.println("Lỗi query: " + e.getMessage());
+            return false;
+        }
     }
+
 }
 

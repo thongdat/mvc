@@ -31,7 +31,7 @@ public class ProductServlet extends HttpServlet {
                 showEditForm(request, response);
                 break;
             case "delete":
-                deleteProduct(request, response);
+                deleteByID(request, response);
                 break;
             default:
                 listProducts(request, response);
@@ -48,11 +48,16 @@ public class ProductServlet extends HttpServlet {
         dispatcher.forward(request, response);
     }
 
-    private void deleteProduct(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        String id = request.getParameter("id");
-        productService.delete(id);
-        response.sendRedirect("/product");
+    private void deleteByID(HttpServletRequest req, HttpServletResponse resp) {
+        String deleteId = req.getParameter("deleteId");
+        boolean isDeleteSuccess = productService.delete(deleteId);
+
+        String mess = isDeleteSuccess ? "Delete success" : "Not delete success";
+        try {
+            resp.sendRedirect("/product?mess=" + mess);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -91,7 +96,7 @@ public class ProductServlet extends HttpServlet {
         String keyword = request.getParameter("keyword");
         List<Product> results = productService.findAll().stream()
                 .filter(p -> p.getName().toLowerCase().contains(keyword.toLowerCase()))
-                .collect(Collectors.toList()); // dùng Collectors.toList() cho Java 8+
+                .collect(Collectors.toList());
         request.setAttribute("products", results);
         RequestDispatcher dispatcher = request.getRequestDispatcher("view/product/product.jsp");
         dispatcher.forward(request, response);

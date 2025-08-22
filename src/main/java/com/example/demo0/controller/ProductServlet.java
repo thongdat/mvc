@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 @WebServlet(name = "ProductServlet", value = "/product")
 public class ProductServlet extends HttpServlet {
-    private IProductService productService = new ProductService();
+    private final IProductService productService = new ProductService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -39,6 +39,12 @@ public class ProductServlet extends HttpServlet {
         }
     }
 
+    private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        RequestDispatcher dispatcher = request.getRequestDispatcher("view/product/create.jsp");
+        dispatcher.forward(request, response);
+    }
+
     private void showEditForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String id = request.getParameter("id");
@@ -48,16 +54,11 @@ public class ProductServlet extends HttpServlet {
         dispatcher.forward(request, response);
     }
 
-    private void deleteByID(HttpServletRequest req, HttpServletResponse resp) {
-        String deleteId = req.getParameter("deleteId");
-        boolean isDeleteSuccess = productService.delete(deleteId);
-
-        String mess = isDeleteSuccess ? "Delete success" : "Not delete success";
-        try {
-            resp.sendRedirect("/product?mess=" + mess);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    private void deleteByID(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String id = req.getParameter("id"); // ✅ sửa lại đúng tham số
+        boolean isDeleteSuccess = productService.delete(id);
+        String mess = isDeleteSuccess ? "Delete success" : "Delete failed";
+        resp.sendRedirect("/product?mess=" + mess);
     }
 
     @Override
@@ -78,42 +79,6 @@ public class ProductServlet extends HttpServlet {
         }
     }
 
-    private void updateProduct(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        String id = request.getParameter("id");
-        String name = request.getParameter("name");
-        int price = Integer.parseInt(request.getParameter("price"));
-        String description = request.getParameter("description");
-        String manufacturer = request.getParameter("manufacturer");
-
-        Product product = new Product(id, name, price, description, manufacturer);
-        productService.update(product);
-        response.sendRedirect("/product");
-    }
-
-    private void searchProduct(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        String keyword = request.getParameter("keyword");
-        List<Product> results = productService.findAll().stream()
-                .filter(p -> p.getName().toLowerCase().contains(keyword.toLowerCase()))
-                .collect(Collectors.toList());
-        request.setAttribute("products", results);
-        RequestDispatcher dispatcher = request.getRequestDispatcher("view/product/product.jsp");
-        dispatcher.forward(request, response);
-    }
-
-    private void listProducts(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        List<Product> productList = productService.findAll();
-        request.setAttribute("productList", productList);
-        request.getRequestDispatcher("view/product/product.jsp").forward(request, response);
-    }
-
-    private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        request.getRequestDispatcher("view/product/create.jsp").forward(request, response);
-    }
-
     private void insertProduct(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         String id = request.getParameter("id");
@@ -125,5 +90,35 @@ public class ProductServlet extends HttpServlet {
         Product newProduct = new Product(id, name, price, description, productor);
         productService.save(newProduct);
         response.sendRedirect("/product");
+    }
+
+    private void updateProduct(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String id = request.getParameter("id");
+        String name = request.getParameter("name");
+        int price = Integer.parseInt(request.getParameter("price"));
+        String description = request.getParameter("description");
+        String productor = request.getParameter("productor");
+
+        Product product = new Product(id, name, price, description, productor);
+        productService.update(product);
+        response.sendRedirect("/product");
+    }
+
+    private void searchProduct(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String keyword = request.getParameter("keyword");
+        List<Product> results = productService.findAll().stream()
+                .filter(p -> p.getName().toLowerCase().contains(keyword.toLowerCase()))
+                .collect(Collectors.toList());
+        request.setAttribute("productList", results);
+        request.getRequestDispatcher("view/product/product.jsp").forward(request, response);
+    }
+
+    private void listProducts(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        List<Product> productList = productService.findAll();
+        request.setAttribute("productList", productList);
+        request.getRequestDispatcher("view/product/product.jsp").forward(request, response);
     }
 }

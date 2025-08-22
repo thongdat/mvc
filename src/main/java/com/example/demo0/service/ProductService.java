@@ -31,10 +31,6 @@ public class ProductService implements IProductService {
 
     @Override
     public boolean delete(String id) {
-        productRepository.delete(id);
-        return false;
+        return productRepository.delete(id);
     }
-
-
 }
-

@@ -7,93 +7,93 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProductRepository implements IProductRepository {
-    private static final List<Product> productList = new ArrayList<>();
-    private final String DELETE_BY_ID = "call delete_by_id(?);";
-
-    static {
-        productList.add(new Product("1", "a", 123332312, "good", "a"));
-        productList.add(new Product("2", "b", 123332444, "normal", "b"));
-        productList.add(new Product("3", "c", 12333312, "bad", "c"));
-    }
+    private static final String SELECT_ALL = "SELECT * FROM product ORDER BY name ASC";
+    private static final String SELECT_BY_ID = "SELECT * FROM product WHERE id = ?";
+    private static final String INSERT = "INSERT INTO product(id, name, price, description, productor) VALUES (?, ?, ?, ?, ?)";
+    private static final String UPDATE = "UPDATE product SET name=?, price=?, description=?, productor=? WHERE id=?";
+    private static final String DELETE = "DELETE FROM product WHERE id=?";
 
     @Override
     public List<Product> findAll() {
-        List<Product> productList = new ArrayList<>();
-
-
-        try(Connection connection = BaseRepository.getConnectDB();) {
-            PreparedStatement preparedStatement = connection.prepareStatement("select *\n" +
-                    "from product\n" +
-                    "order by name asc;");
-            ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                String id = resultSet.getString("id");
-                String name = resultSet.getString("name");
-                int price = resultSet.getInt("price");
-                String description = resultSet.getString("description");
-                String productor = resultSet.getString("productor");
-                Product product = new Product(id, name, price, description, productor);
-                productList.add(product);
+        List<Product> products = new ArrayList<>();
+        try (Connection connection = BaseRepository.getConnectDB();
+             PreparedStatement ps = connection.prepareStatement(SELECT_ALL);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                products.add(new Product(
+                        rs.getString("id"),
+                        rs.getString("name"),
+                        rs.getInt("price"),
+                        rs.getString("description"),
+                        rs.getString("productor")
+                ));
             }
-
-        }catch (SQLException e){
-            System.out.println("Loi Querry");
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-
-        return productList;
-
-
+        return products;
     }
 
     @Override
     public void save(Product product) {
-        try(Connection connection = BaseRepository.getConnectDB();){
-            PreparedStatement preparedStatement = connection.prepareStatement("insert into product(id,name,price,description,productor) values(?,?,?,?,?);");
-            preparedStatement.setString(1, product.getId());
-            preparedStatement.setString(2, product.getName());
-            preparedStatement.setInt(3, product.getPrice());
-            preparedStatement.setString(4, product.getDescription());
-            preparedStatement.setString(5, product.getProductor());
-            preparedStatement.executeUpdate();
+        try (Connection connection = BaseRepository.getConnectDB();
+             PreparedStatement ps = connection.prepareStatement(INSERT)) {
+            ps.setString(1, product.getId());
+            ps.setString(2, product.getName());
+            ps.setInt(3, product.getPrice());
+            ps.setString(4, product.getDescription());
+            ps.setString(5, product.getProductor());
+            ps.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
-
     }
+
     @Override
     public Product findById(String id) {
-
-        for (Product p : productList) {
-            if (p.getId().equals(id)) {
-                return p;
+        try (Connection connection = BaseRepository.getConnectDB();
+             PreparedStatement ps = connection.prepareStatement(SELECT_BY_ID)) {
+            ps.setString(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return new Product(
+                        rs.getString("id"),
+                        rs.getString("name"),
+                        rs.getInt("price"),
+                        rs.getString("description"),
+                        rs.getString("productor")
+                );
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
         return null;
     }
 
     @Override
     public void update(Product product) {
-        Product existing = findById(product.getId());
-        if (existing != null) {
-            existing.setName(product.getName());
-            existing.setPrice(product.getPrice());
-            existing.setDescription(product.getDescription());
-            existing.setProductor(product.getProductor());
+        try (Connection connection = BaseRepository.getConnectDB();
+             PreparedStatement ps = connection.prepareStatement(UPDATE)) {
+            ps.setString(1, product.getName());
+            ps.setInt(2, product.getPrice());
+            ps.setString(3, product.getDescription());
+            ps.setString(4, product.getProductor());
+            ps.setString(5, product.getId());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
     @Override
     public boolean delete(String id) {
-        try (Connection connection = BaseRepository.getConnectDB()) {
-            CallableStatement callableStatement = connection.prepareCall(DELETE_BY_ID);
-            callableStatement.setString(1, id);
-            int effectRow = callableStatement.executeUpdate();
-            return effectRow == 1;
+        try (Connection connection = BaseRepository.getConnectDB();
+             PreparedStatement ps = connection.prepareStatement(DELETE)) {
+            ps.setString(1, id);
+            return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.out.println("Lỗi query: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
-
 }
-
